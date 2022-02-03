@@ -7,13 +7,15 @@ public class Token implements IToken {
     final String input;
     final int pos;
     final int length;
+    final SourceLocation src;
 
-    Token(Kind kind, String input, int pos, int length)
+    Token(Kind kind, String input, int pos, int length, SourceLocation src)
     {
         this.kind = kind;
         this.input = input;
         this.pos = pos;
         this.length = length;
+        this.src = src;
     }
 
     @Override
@@ -25,32 +27,32 @@ public class Token implements IToken {
 
     public String getText()
     {
-        return null;
+        return input;
     }
 
     @Override
     public int getIntValue()
     {
-        return 0;
+        return Integer.parseInt(input);
     }
 
     @Override
     public float getFloatValue() {
-        return 0;
+        return Float.parseFloat(input);
     }
 
     @Override
     public boolean getBooleanValue() {
-        return false;
+        return Boolean.parseBoolean(input);
     }
 
     @Override
     public String getStringValue() {
-        return null;
+        return input;
     }
 
     @Override public SourceLocation getSourceLocation() {
-        return null;
+        return src;
     }
 
 }
