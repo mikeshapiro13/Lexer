@@ -17,7 +17,7 @@ public class Lexer implements ILexer
         START,
         HAVE_EQUALS,
         HAVE_RARROW,
-        HAVE_LARRAOW,
+        HAVE_LARROW,
         HAVE_EXCLAM,
         HAVE_ZERO,
         HAS_DOT,
@@ -67,8 +67,7 @@ public class Lexer implements ILexer
         }
     };
 
-    Lexer(String source)
-    {
+    Lexer(String source) {
         Token newTok;
         tokens = new ArrayList<>();
         char[] chars = source.toCharArray();
@@ -76,12 +75,12 @@ public class Lexer implements ILexer
         boolean finished = false;
         int pos = 0;
         int startPos = 0;
+        int stringStart = 0;
         int line = 0;
         int column = 0;
         IToken.SourceLocation srcLoc = new IToken.SourceLocation(0, 0);
         while (!finished)
         {
-            srcLoc = new IToken.SourceLocation(line, column);
             char ch;
             if (chars.length == pos) {
                 ch = 0;
@@ -106,6 +105,7 @@ public class Lexer implements ILexer
                     switch (ch) {
                         case '"' -> {
                             state = State.IN_STRING;
+                            stringStart = pos;
                             text.add(ch);
                             ++pos;
                             ++column;
@@ -137,108 +137,125 @@ public class Lexer implements ILexer
                         case '&' -> {
                             newTok = new Token(Kind.AND, "&", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '=' -> {
-                            newTok = new Token(Kind.ASSIGN, "=", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
+                            state = State.HAVE_EQUALS;
+                            text.add(ch);
                             pos++;
                             column++;
                         }
                         case '!' -> {
                             newTok = new Token(Kind.BANG, "!", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case ',' -> {
                             newTok = new Token(Kind.COMMA, ",", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '/' -> {
                             newTok = new Token(Kind.DIV, "/", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '>' -> {
                             newTok = new Token(Kind.GT, ">", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '<' -> {
                             newTok = new Token(Kind.LT, "<", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '(' -> {
                             newTok = new Token(Kind.LPAREN, "(", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '[' -> {
                             newTok = new Token(Kind.LSQUARE, ")", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '-' -> {
                             newTok = new Token(Kind.MINUS, "-", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '%' -> {
                             newTok = new Token(Kind.MOD, "%", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '|' -> {
                             newTok = new Token(Kind.OR, "|", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '+' -> {
                             newTok = new Token(Kind.PLUS, "+", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '^' -> {
                             newTok = new Token(Kind.RETURN, "^", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case ')' -> {
                             newTok = new Token(Kind.RPAREN, ")", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case ']' -> {
                             newTok = new Token(Kind.RSQUARE, "]", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case ';' -> {
                             newTok = new Token(Kind.SEMI, ";", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '*' -> {
                             newTok = new Token(Kind.TIMES, "*", startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
@@ -249,12 +266,15 @@ public class Lexer implements ILexer
                             pos++;
                             column++;
                         }
+                        default -> {
+                            newTok = new Token(Kind.ERROR, Character.toString(ch), startPos, pos - startPos, srcLoc);
+                        }
                     }
                 }
                 case HAVE_EQUALS -> {
 
                 }
-                case HAVE_LARRAOW -> {
+                case HAVE_LARROW -> {
 
                 }
                 case HAVE_RARROW -> {
@@ -276,7 +296,21 @@ public class Lexer implements ILexer
 
                 }
                 case IN_IDENT -> {
-
+                    if (!Character.isJavaIdentifierPart(ch)) {
+                        state = State.START;
+                        if (reserved_map.containsKey(text.toString()))
+                            newTok = new Token(reserved_map.get(text.toString()), text.toString(), startPos, pos - startPos, srcLoc);
+                        else
+                            newTok = new Token(Kind.IDENT, text.toString(), startPos, pos - startPos, srcLoc);
+                        ++pos;
+                        ++column;
+                        text.clear();
+                    }
+                    else {
+                        text.add(ch);
+                        ++pos;
+                        ++column;
+                    }
                 }
                 case IN_COMM -> {
                     if (ch == '\r') {
@@ -289,12 +323,18 @@ public class Lexer implements ILexer
                             column = 0;
                         }
                         state = State.START;
+                        srcLoc = new IToken.SourceLocation(line, column);
                     }
                     else if (ch == '\n') {
                         ++pos;
                         ++line;
                         column = 0;
                         state = State.START;
+                        srcLoc = new IToken.SourceLocation(line, column);
+                    }
+                    else {
+                        ++pos;
+                        ++column;
                     }
                 }
                 case IN_STRING -> {
@@ -316,8 +356,13 @@ public class Lexer implements ILexer
                             ++pos;
                             ch = chars[pos];
                             if (Character.isWhitespace(ch)) {
+                                srcLoc = new IToken.SourceLocation(line, stringStart);
                                 newTok = new Token(Kind.STRING_LIT, text.toString(), pos, startPos - pos, srcLoc);
+                                tokens.add(newTok);
                                 state = State.START;
+                                ++pos;
+                                ++line;
+                                column = 0;
                             }
 
                         }
@@ -338,12 +383,17 @@ public class Lexer implements ILexer
     @Override
     public IToken next() throws LexicalException {
         IToken temp = tokens.get(tokenPos);
+        if (temp.getKind() == Kind.ERROR)
+            throw new LexicalException("Lexer Error");
         tokenPos++;
         return temp;
     }
 
     @Override
     public IToken peek() throws LexicalException {
-        return tokens.get(tokenPos);
+        IToken temp = tokens.get(tokenPos);
+        if (temp.getKind() == Kind.ERROR)
+            throw new LexicalException("Lexer Error");
+        return temp;
     }
 }
