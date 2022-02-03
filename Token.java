@@ -26,13 +26,13 @@ public class Token implements IToken {
 
     public String getText()
     {
-
+        return null;
     }
 
     @Override
     public int getIntValue()
     {
-
+        return 0;
     }
 
     @Override
@@ -50,6 +50,8 @@ public class Token implements IToken {
         return null;
     }
 
-    @Override public SourceLocation getSourceLocation() {}
+    @Override public SourceLocation getSourceLocation() {
+        return null;
+    }
 
 }
