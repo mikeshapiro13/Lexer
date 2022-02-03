@@ -71,6 +71,7 @@ public class Lexer implements ILexer
     {
         tokens = new ArrayList<>();
         char[] chars = source.toCharArray();
+        ArrayList<Character> token = new ArrayList<Character>();
         boolean finished = false;
         int pos = 0;
         int startPos = 0;
@@ -92,7 +93,22 @@ public class Lexer implements ILexer
                 case START -> {
                     Token newTok;
                     startPos = pos;
+
+                    if (Character.isJavaIdentifierStart(ch))
+                    {
+                        state = State.IN_IDENT;
+                        token.add(ch);
+                        ++pos;
+                        ++column;
+                        break;
+                    }
+
                     switch (ch) {
+                        case '#' -> {
+                            state = State.IN_COMM;
+                            ++pos;
+                            ++column;
+                        }
                         case '0' -> {
                             state = State.HAVE_ZERO;
                             ++pos;
@@ -257,7 +273,23 @@ public class Lexer implements ILexer
 
                 }
                 case IN_COMM -> {
-
+                    if (ch == '\r') {
+                        ++pos;
+                        ++column;
+                        ch = chars[pos];
+                        if (ch == '\n') {
+                            ++pos;
+                            ++line;
+                            column = 0;
+                        }
+                        state = State.START;
+                    }
+                    else if (ch == '\n') {
+                        ++pos;
+                        ++line;
+                        column = 0;
+                        state = State.START;
+                    }
                 }
                 case IN_WHITE -> {
 
