@@ -17,7 +17,6 @@ public class Token implements IToken {
     }
 
     @Override
-
     public Kind getKind()
     {
         return kind;
