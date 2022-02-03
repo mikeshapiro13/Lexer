@@ -25,7 +25,7 @@ public class Lexer implements ILexer
         IN_NUM,
         IN_IDENT,
         IN_COMM,
-        IN_WHITE
+        IN_STRING
     }
 
     private State state = State.START;
@@ -69,9 +69,10 @@ public class Lexer implements ILexer
 
     Lexer(String source)
     {
+        Token newTok;
         tokens = new ArrayList<>();
         char[] chars = source.toCharArray();
-        ArrayList<Character> token = new ArrayList<Character>();
+        ArrayList<Character> text = new ArrayList<Character>();
         boolean finished = false;
         int pos = 0;
         int startPos = 0;
@@ -91,19 +92,24 @@ public class Lexer implements ILexer
             switch(this.state)
             {
                 case START -> {
-                    Token newTok;
                     startPos = pos;
 
                     if (Character.isJavaIdentifierStart(ch))
                     {
                         state = State.IN_IDENT;
-                        token.add(ch);
+                        text.add(ch);
                         ++pos;
                         ++column;
                         break;
                     }
 
                     switch (ch) {
+                        case '"' -> {
+                            state = State.IN_STRING;
+                            text.add(ch);
+                            ++pos;
+                            ++column;
+                        }
                         case '#' -> {
                             state = State.IN_COMM;
                             ++pos;
@@ -291,7 +297,36 @@ public class Lexer implements ILexer
                         state = State.START;
                     }
                 }
-                case IN_WHITE -> {
+                case IN_STRING -> {
+                    switch(ch)
+                    {
+                        case '\b','\t', '\f','\'','\\' -> {
+                            text.add(ch);
+                            ++pos;
+                            ++column;
+                        }
+                        case '\n','\r' -> {
+                            text.add(ch);
+                            ++pos;
+                            ++line;
+                            column = 0;
+                        }
+                        case '\"' -> {
+                            text.add(ch);
+                            ++pos;
+                            ch = chars[pos];
+                            if (Character.isWhitespace(ch)) {
+                                newTok = new Token(Kind.STRING_LIT, text.toString(), pos, startPos - pos, srcLoc);
+                                state = State.START;
+                            }
+
+                        }
+                        default -> {
+                            text.add(ch);
+                            ++pos;
+                            ++column;
+                        }
+                    }
 
                 }
             }
