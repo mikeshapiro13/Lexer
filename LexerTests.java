@@ -1,4 +1,4 @@
-package edu.ufl.cise.plc.test;
+package edu.ufl.cise.plc;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
