@@ -20,6 +20,7 @@ public class Lexer implements ILexer
         HAVE_LARROW,
         HAVE_EXCLAM,
         HAVE_ZERO,
+        HAVE_MINUS,
         HAS_DOT,
         IN_FLOAT,
         IN_NUM,
@@ -72,6 +73,7 @@ public class Lexer implements ILexer
         tokens = new ArrayList<>();
         char[] chars = source.toCharArray();
         ArrayList<Character> text = new ArrayList<Character>();
+        ArrayList<Character> rawText = new ArrayList<Character>();
         boolean finished = false;
         int pos = 0;
         int startPos = 0;
@@ -97,16 +99,20 @@ public class Lexer implements ILexer
                     {
                         state = State.IN_IDENT;
                         text.add(ch);
+                        rawText.add(ch);
+                        srcLoc = new IToken.SourceLocation(line, column);
                         ++pos;
                         ++column;
                         break;
                     }
 
+
                     switch (ch) {
                         case '"' -> {
                             state = State.IN_STRING;
                             stringStart = pos;
-                            text.add(ch);
+                            rawText.add(ch);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             ++pos;
                             ++column;
                         }
@@ -117,197 +123,413 @@ public class Lexer implements ILexer
                         }
                         case '0' -> {
                             state = State.HAVE_ZERO;
+                            srcLoc = new IToken.SourceLocation(line, column);
+                            text.add(ch);
+                            rawText.add(ch);
                             ++pos;
                             ++column;
                         }
                         case '1','2','3','4','5','6','7','8','9' -> {
                             state = State.IN_NUM;
+                            srcLoc = new IToken.SourceLocation(line, column);
+                            text.add(ch);
+                            rawText.add(ch);
                             ++pos;
                             ++column;
                         }
                         case ' ', '\t', '\r' -> {
                             ++pos;
                             ++column;
+                            srcLoc = new IToken.SourceLocation(line, column);
                         }
                         case '\n' -> {
                             ++pos;
                             ++line;
                             column = 0;
+//                            srcLoc = new IToken.SourceLocation(line, column);
                         }
                         case '&' -> {
-                            newTok = new Token(Kind.AND, "&", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.AND, "&", "&", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '=' -> {
                             state = State.HAVE_EQUALS;
-                            text.add(ch);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
+                            ch = chars[pos];
                         }
                         case '!' -> {
-                            newTok = new Token(Kind.BANG, "!", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
+                            state = State.HAVE_EXCLAM;
                             srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case ',' -> {
-                            newTok = new Token(Kind.COMMA, ",", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.COMMA, ",", ",", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '/' -> {
-                            newTok = new Token(Kind.DIV, "/", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.DIV, "/", "/", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '>' -> {
-                            newTok = new Token(Kind.GT, ">", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
+                            state = State.HAVE_RARROW;
                             srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '<' -> {
-                            newTok = new Token(Kind.LT, "<", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
+                            state = State.HAVE_LARROW;
                             srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '(' -> {
-                            newTok = new Token(Kind.LPAREN, "(", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.LPAREN, "(", "(" , startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '[' -> {
-                            newTok = new Token(Kind.LSQUARE, ")", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.LSQUARE, "[", "[", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '-' -> {
-                            newTok = new Token(Kind.MINUS, "-", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
+                            state = State.HAVE_MINUS;
                             srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '%' -> {
-                            newTok = new Token(Kind.MOD, "%", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.MOD, "%", "%", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '|' -> {
-                            newTok = new Token(Kind.OR, "|", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.OR, "|", "|", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '+' -> {
-                            newTok = new Token(Kind.PLUS, "+", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.PLUS, "+", "+", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
+//                            srcLoc = new IToken.SourceLocation(line, column);
                             pos++;
                             column++;
                         }
                         case '^' -> {
-                            newTok = new Token(Kind.RETURN, "^", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.RETURN, "^", "^", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case ')' -> {
-                            newTok = new Token(Kind.RPAREN, ")", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.RPAREN, ")", ")", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case ']' -> {
-                            newTok = new Token(Kind.RSQUARE, "]", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.RSQUARE, "]", "]", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case ';' -> {
-                            newTok = new Token(Kind.SEMI, ";", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.SEMI, ";", ";", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case '*' -> {
-                            newTok = new Token(Kind.TIMES, "*", startPos, pos - startPos, srcLoc);
-                            tokens.add(newTok);
                             srcLoc = new IToken.SourceLocation(line, column);
+                            newTok = new Token(Kind.TIMES, "*", "*", startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
                             pos++;
                             column++;
                         }
                         case 0 -> {
-                            newTok = new Token(Kind.EOF, null, startPos, pos - startPos, srcLoc);
+                            newTok = new Token(Kind.EOF, null, null, startPos, pos - startPos, srcLoc);
                             tokens.add(newTok);
+                            srcLoc = new IToken.SourceLocation(line, column);
                             finished = true;
                             pos++;
                             column++;
                         }
                         default -> {
-                            newTok = new Token(Kind.ERROR, Character.toString(ch), startPos, pos - startPos, srcLoc);
+                            newTok = new Token(Kind.ERROR, Character.toString(ch), Character.toString(ch), startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
+                            ++pos;
+                            ++column;
+                            srcLoc = new IToken.SourceLocation(line, column);
                         }
                     }
                 }
                 case HAVE_EQUALS -> {
+                    if(ch == '=') {
+                        newTok = new Token(Kind.EQUALS, "==", "==", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else {
+                        newTok = new Token(Kind.ASSIGN, "=" , "=", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
 
+                    }
+                    state = State.START;
                 }
                 case HAVE_LARROW -> {
-
+                    if(ch == '<') {
+                        newTok = new Token(Kind.LANGLE, "<<", "<<", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else if(ch == '-'){
+                        newTok = new Token(Kind.LARROW, "<-", "<", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else if (ch == '=') {
+                        newTok = new Token(Kind.LE, "<=", "<=", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else
+                    {
+                        newTok = new Token(Kind.LT, "<", "<", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                    }
+                    state = State.START;
                 }
                 case HAVE_RARROW -> {
-
+                    if(ch == '='){
+                        newTok = new Token(Kind.GE, ">=",">=", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else if(ch == '>') {
+                        newTok = new Token(Kind.RANGLE, ">>", ">>", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                        pos++;
+                        column++;
+                    }
+                    else {
+                        newTok = new Token(Kind.GT, ">", ">", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+                    }
+                    state = State.START;
                 }
                 case HAVE_EXCLAM -> {
-
+                    if (ch == '=') {
+                        newTok = new Token(Kind.NOT_EQUALS, "!=", "!=", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                        pos++;
+                        column++;
+                    }
+                    else {
+                        newTok = new Token(Kind.BANG, "!", "!", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                    }
+                    state = State.START;
                 }
                 case HAVE_ZERO -> {
-
+                    if(ch == '.') {
+                        state = State.HAS_DOT;
+                        text.add(ch);
+                        rawText.add(ch);
+                        pos++;
+                        column++;
+                    } else {
+                        newTok = new Token(Kind.INT_LIT, "0", "0", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+//                        srcLoc = new IToken.SourceLocation(line, column);
+//                        pos++;
+//                        column++;
+                        text.clear();
+                        rawText.clear();
+                        state = State.START;
+                    }
                 }
                 case HAS_DOT -> {
-
+                    if (Character.isDigit(ch))
+                    {
+                        state = State.IN_FLOAT;
+                        text.add(ch);
+                        rawText.add(ch);
+                        pos++;
+                        column++;
+                    }
+                    else
+                    {
+                        newTok = new Token(Kind.ERROR, null, null, startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                        pos++;
+                        column++;
+                        state = State.START;
+                        text.clear();
+                        rawText.clear();
+                    }
+                }
+                case HAVE_MINUS -> {
+                    if (ch == '>')
+                    {
+                        newTok = new Token(Kind.RARROW, "->", "->", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                        ++pos;
+                        ++column;
+                    }
+                    else
+                    {
+                        newTok = new Token(Kind.MINUS, "-", "-", startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                    }
+                    state = State.START;
                 }
                 case IN_FLOAT -> {
-
+                    if (Character.isDigit(ch))
+                    {
+                        text.add(ch);
+                        rawText.add(ch);
+                        ++pos;
+                        ++column;
+                    }
+                    else
+                    {
+                        StringBuilder temp = new StringBuilder();
+                        for (int i = 0; i < text.size(); ++i)
+                        {
+                            temp.append(text.get(i));
+                        }
+                        double guy = Double.parseDouble(temp.toString());
+                        if (guy < Float.MAX_VALUE)
+                            newTok =  new Token(Kind.FLOAT_LIT, temp.toString(), temp.toString(), startPos, pos - startPos, srcLoc);
+                        else
+                            newTok = new Token(Kind.ERROR, null, null, startPos, pos - startPos, srcLoc);
+                        if (ch == '\n')
+                        {
+                            column = 0;
+                            ++line;
+                            ++pos;
+                        }
+//                        else
+//                        {
+//                            ++column;
+//                        }
+//                        ++pos;
+                        tokens.add(newTok);
+                        state = State.START;
+                        text.clear();
+                        rawText.clear();
+                    }
                 }
                 case IN_NUM -> {
-
+                    StringBuilder temp = new StringBuilder();
+                    for (int i = 0; i < text.size(); ++i)
+                    {
+                        temp.append(text.get(i));
+                    }
+                    long guy = Long.parseLong(temp.toString());
+                    if (Character.isDigit(ch))
+                    {
+                        if (guy < Integer.MAX_VALUE) {
+                            text.add(ch);
+                            rawText.add(ch);
+                            ++pos;
+                            ++column;
+                        }
+                        else {
+                            newTok = new Token(Kind.ERROR, null, null, startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
+                            state = State.START;
+                            text.clear();
+                            rawText.clear();
+                        }
+                    }
+                    else if (ch == '.')
+                    {
+                        state = State.HAS_DOT;
+                        text.add(ch);
+                        rawText.add(ch);
+                        pos++;
+                        column++;
+                    }
+                    else
+                    {
+                        newTok =  new Token(Kind.INT_LIT, temp.toString(), temp.toString(),  startPos, pos - startPos, srcLoc);
+                        tokens.add(newTok);
+                        state = State.START;
+                        text.clear();
+                        rawText.clear();
+                    }
                 }
                 case IN_IDENT -> {
                     if (!Character.isJavaIdentifierPart(ch)) {
                         state = State.START;
-                        if (reserved_map.containsKey(text.toString()))
-                            newTok = new Token(reserved_map.get(text.toString()), text.toString(), startPos, pos - startPos, srcLoc);
+                        StringBuilder temp = new StringBuilder();
+                        for (int i = 0; i < text.size(); ++i)
+                        {
+                            temp.append(text.get(i));
+                        }
+                        if (reserved_map.containsKey(temp.toString())) {
+                            Kind tempKind = reserved_map.get(temp.toString());
+                            newTok = new Token(tempKind, text.toString(), text.toString(), startPos, pos - startPos, srcLoc);
+                        }
                         else
-                            newTok = new Token(Kind.IDENT, text.toString(), startPos, pos - startPos, srcLoc);
-                        ++pos;
-                        ++column;
+                            newTok = new Token(Kind.IDENT, text.toString(), text.toString(), startPos, pos - startPos, srcLoc);
+                        if (ch == '\n')
+                        {
+                            column = 0;
+                            ++line;
+                            ++pos;
+                        }
+//                        else
+//                        {
+//                            ++column;
+//                        }
+//                        ++pos;
+                        tokens.add(newTok);
+                        srcLoc = new IToken.SourceLocation(line, column);
                         text.clear();
+                        rawText.clear();
                     }
                     else {
                         text.add(ch);
+                        rawText.add(ch);
                         ++pos;
                         ++column;
                     }
@@ -342,32 +564,53 @@ public class Lexer implements ILexer
                     {
                         case '\b','\t', '\f','\'','\\' -> {
                             text.add(ch);
+                            rawText.add('\\');
+                            rawText.add(ch);
                             ++pos;
                             ++column;
                         }
                         case '\n','\r' -> {
                             text.add(ch);
+                            rawText.add('\\');
+                            rawText.add(ch);
                             ++pos;
                             ++line;
                             column = 0;
                         }
                         case '\"' -> {
-                            text.add(ch);
+                            rawText.add('\\');
+                            rawText.add(ch);
                             ++pos;
-                            ch = chars[pos];
+                            if (pos < chars.length) {
+                                ch = chars[pos];
+                            }
+                            else {
+                                newTok = new Token(Kind.STRING_LIT, text.toString(), rawText.toString(), startPos, pos - startPos, srcLoc);
+                                tokens.add(newTok);
+                                state = State.START;
+                            }
                             if (Character.isWhitespace(ch)) {
-                                srcLoc = new IToken.SourceLocation(line, stringStart);
-                                newTok = new Token(Kind.STRING_LIT, text.toString(), pos, startPos - pos, srcLoc);
+//                                srcLoc = new IToken.SourceLocation(line, stringStart);
+                                newTok = new Token(Kind.STRING_LIT, text.toString(), rawText.toString(), pos, startPos - pos, srcLoc);
                                 tokens.add(newTok);
                                 state = State.START;
                                 ++pos;
                                 ++line;
                                 column = 0;
+                                text.clear();
+                                rawText.clear();
+//                                srcLoc = new IToken.SourceLocation(line, column);
                             }
 
                         }
+                        case 0 -> {
+                            state = State.START;
+                            newTok = new Token(Kind.ERROR, null, null, startPos, pos - startPos, srcLoc);
+                            tokens.add(newTok);
+                        }
                         default -> {
                             text.add(ch);
+                            rawText.add(ch);
                             ++pos;
                             ++column;
                         }
